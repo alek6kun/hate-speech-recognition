@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+from torch.cuda.amp import GradScaler, autocast
 from transformers import DebertaV2Tokenizer, DebertaV2ForSequenceClassification
 from transformers import AutoConfig
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
@@ -27,7 +28,7 @@ label_test = np.load(test_label_path, allow_pickle=True)
 
 # Create a custom dataset class
 class CustomDataset(Dataset):
-    def __init__(self, text_data, label_data, tokenizer, max_length=512):
+    def __init__(self, text_data, label_data, tokenizer, max_length=256):
         self.text_data = text_data
         self.label_data = label_data
         self.tokenizer = tokenizer
@@ -70,7 +71,7 @@ train_dataset = CustomDataset(text_train, label_train, tokenizer)
 test_dataset = CustomDataset(text_test, label_test, tokenizer)
 
 # DataLoader parameters
-batch_size = 32
+batch_size = 16
 shuffle = True
 
 # Create the DataLoader instances for training and testing
@@ -114,43 +115,50 @@ class SMARTDeBERTaClassificationModel(nn.Module):
         return state, loss
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
-# Load configuration from pre-trained
+print(f"Using device: {device}")
+
 config = AutoConfig.from_pretrained('microsoft/mdeberta-v3-base', num_labels=2)
 base_model = DebertaV2ForSequenceClassification(config).from_pretrained('microsoft/mdeberta-v3-base')
 model = SMARTDeBERTaClassificationModel(base_model, weight=0.02).to(device)
+
+if torch.cuda.device_count() > 1:
+    print(f"Using {torch.cuda.device_count()} GPUs")
+    model = nn.DataParallel(model)
+
+model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=2e-5)
+scaler = GradScaler()
+accumulation_steps = 2  # Gradient accumulation steps
 
 def train_model(model, dataloader, optimizer, device):
-    model.train()  # Set the model to training mode
+    model.train()
     total_loss = 0
     total_steps = len(dataloader)
+
     for batch_idx, batch in enumerate(dataloader):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
         labels = batch['labels'].to(device)
 
-        # Zero the parameter gradients
         optimizer.zero_grad()
-        
-        # Forward pass
-        _, loss = model(input_ids, attention_mask, labels)
 
-        # Backward and optimize
-        loss.backward()
-        optimizer.step()
+        with autocast():
+            _, loss = model(input_ids, attention_mask, labels)
+            loss = loss / accumulation_steps  # Normalize loss
+
+        scaler.scale(loss).backward()
+
+        if (batch_idx + 1) % accumulation_steps == 0:
+            scaler.step(optimizer)
+            scaler.update()
+            optimizer.zero_grad()
 
         total_loss += loss.item()
 
-        # Print loss every few batches
-        print(f'Batch {batch_idx + 1}/{total_steps}, Batch Loss: {loss.item():.4f}')
+        if (batch_idx + 1) % accumulation_steps == 0:
+            print(f'Batch {batch_idx + 1}/{total_steps}, Batch Loss: {loss.item():.4f}')
 
-        # Clean up: detach tensors and free memory
-        del input_ids, attention_mask, labels, loss
-        torch.cuda.empty_cache()
-
-
-    avg_loss = total_loss / len(dataloader)
+    avg_loss = total_loss / total_steps
     print(f'Training Loss: {avg_loss:.4f}')
     return avg_loss
 
@@ -165,23 +173,23 @@ def compute_metrics(pred_labels, true_labels):
     }
 
 def evaluate_model(model, dataloader, device):
-    model.eval()  # Set the model to evaluation mode
+    model.eval()
     predictions = []
     true_labels = []
 
-    with torch.no_grad():  # Disable gradient computation
+    with torch.no_grad():
         for batch in dataloader:
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
             labels = batch['labels'].to(device)
 
-            outputs, _ = model(input_ids, attention_mask, labels)
-            _, preds = torch.max(outputs, dim=1)
+            with autocast():
+                outputs, _ = model(input_ids, attention_mask, labels)
+                _, preds = torch.max(outputs, dim=1)
 
             predictions.extend(preds.cpu().numpy())
             true_labels.extend(labels.cpu().numpy())
 
-    # Compute the metrics
     metrics = compute_metrics(predictions, true_labels)
     return metrics
 
@@ -194,4 +202,4 @@ for epoch in range(num_epochs):
     metrics = evaluate_model(model, test_loader, device)
     print(f'Validation Metrics: {metrics}')
 
-torch.save(model, 'smart_deberta_classification_model.pt')
+torch.save(model.state_dict(), 'smart_deberta_classification_model.pt')
