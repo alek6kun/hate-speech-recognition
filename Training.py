@@ -1,8 +1,4 @@
 import os, sys
-# from google.colab import drive
-# drive.mount('/content/drive/')
-root = '/Users/alexislimozin/Documents/hate-speech-recognition'
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -13,6 +9,8 @@ from transformers import AutoConfig
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 from smart_pytorch import SMARTLoss, kl_loss, sym_kl_loss
 from transformers import BertTokenizer
+
+root = os.path.dirname(os.path.abspath(__file__))
 
 tokenizer = DebertaV2Tokenizer.from_pretrained('microsoft/mdeberta-v3-base')
 
@@ -63,7 +61,7 @@ class CustomDataset(Dataset):
       return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
-            'labels': torch.tensor(label, dtype=torch.long)
+            'labels': torch.tensor(label, dtype=torch.int64)
         }
 
 
@@ -101,7 +99,7 @@ class SMARTDeBERTaClassificationModel(nn.Module):
         
         # Define eval function
         def eval(embed):
-            outputs = self.model(inputs_embeds=embed, attention_mask=attention_mask)
+            outputs = self.model(inputs_embeds=embed, attention_mask=attention_mask, labels=labels)
             return outputs.logits
 
         # Define SMART loss
@@ -115,7 +113,7 @@ class SMARTDeBERTaClassificationModel(nn.Module):
 
         return state, loss
 
-device = "cpu" #torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+device = torch.device("gpu" if torch.gpu.is_available() else "cpu")
 print(device)
 # Load configuration from pre-trained
 config = AutoConfig.from_pretrained('microsoft/mdeberta-v3-base', num_labels=2)
