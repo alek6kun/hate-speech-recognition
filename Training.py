@@ -113,7 +113,7 @@ class SMARTDeBERTaClassificationModel(nn.Module):
 
         return state, loss
 
-device = torch.device("gpu" if torch.gpu.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 # Load configuration from pre-trained
 config = AutoConfig.from_pretrained('microsoft/mdeberta-v3-base', num_labels=2)
@@ -124,8 +124,8 @@ optimizer = torch.optim.Adam(model.parameters(), lr=2e-5)
 def train_model(model, dataloader, optimizer, device):
     model.train()  # Set the model to training mode
     total_loss = 0
-
-    for batch in dataloader:
+    total_steps = len(dataloader)
+    for batch_idx, batch in enumerate(dataloader):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
         labels = batch['labels'].to(device)
@@ -141,6 +141,10 @@ def train_model(model, dataloader, optimizer, device):
         optimizer.step()
 
         total_loss += loss.item()
+
+        # Print loss every few batches
+        print(f'Batch {batch_idx + 1}/{total_steps}, Batch Loss: {loss.item():.4f}')
+
 
     avg_loss = total_loss / len(dataloader)
     print(f'Training Loss: {avg_loss:.4f}')
