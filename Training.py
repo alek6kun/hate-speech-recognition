@@ -25,6 +25,19 @@ label_train = np.load(train_label_path, allow_pickle=True)
 text_test = np.load(test_text_path, allow_pickle=True)
 label_test = np.load(test_label_path, allow_pickle=True)
 
+# Function to remove 'nan' rows for string data
+def remove_nan_rows(text_data, label_data):
+    # Assuming 'nan' is a string
+    is_nan = np.array([str(item).strip().lower() == 'nan' for item in text_data])
+    valid_indices = ~is_nan
+    cleaned_text_data = text_data[valid_indices]
+    cleaned_label_data = label_data[valid_indices]
+    return cleaned_text_data, cleaned_label_data
+
+# Remove 'nan' rows from train and test datasets
+text_train, label_train = remove_nan_rows(text_train, label_train)
+text_test, label_test = remove_nan_rows(text_test, label_test)
+
 # Create a custom dataset class
 class CustomDataset(Dataset):
     def __init__(self, text_data, label_data, tokenizer, max_length=512):
