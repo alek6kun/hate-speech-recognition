@@ -1,9 +1,11 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import numpy as np
+import os
 
 
 # Define the paths to the CSV files
+root = os.path.dirname(os.path.abspath(__file__))
 filename_1 = '/Users/ninabodenstab/Desktop/University/EPFL/Ma2/Deep Learning/Projet/cleaned_data_toxygen.csv' 
 filename_2 = '/Users/ninabodenstab/Desktop/University/EPFL/Ma2/Deep Learning/Projet/HateMoji_reduced.csv'  
 filename_3 = '/Users/ninabodenstab/Desktop/University/EPFL/Ma2/Deep Learning/Projet/cleaned_online-misoginy-eacl2021_reduced.csv'

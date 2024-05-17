@@ -14,11 +14,11 @@
 
 echo "Starting job on $(hostname)"
 echo "Loading modules..."
-module load python/3.12.2
-module load cuda/12.1
+module load python/3.10.4
+module load cuda/12.1.1
 
 echo "Activating virtual environment..."
-source /home/limozin/venvs/course_py-3.12/bin/activate  # Ensure this points to your virtual environment
+source /home/limozin/venvs/course_py-3.10/bin/activate  # Ensure this points to your virtual environment
 
 echo "Running Python script..."
 python train_model.py
