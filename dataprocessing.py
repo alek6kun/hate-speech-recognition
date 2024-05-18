@@ -78,10 +78,14 @@ array_label = combined_dataset3['label'].values
 # Function to remove 'nan' rows for string data
 def remove_nan_rows(text_data, label_data):
     # Assuming 'nan' is a string
-    is_nan = np.array([str(item).strip().lower() == 'nan' for item in text_data])
-    valid_indices = ~is_nan
+    is_nan_text = np.array([str(item).strip().lower() == 'nan' for item in text_data])
+    is_nan_label = np.array([str(item).strip().lower() == 'nan' for item in label_data])
+    
+    valid_indices = ~(is_nan_text | is_nan_label)
+    
     cleaned_text_data = text_data[valid_indices]
     cleaned_label_data = label_data[valid_indices]
+    
     return cleaned_text_data, cleaned_label_data
 
 # Remove 'nan' rows from train and test datasets
