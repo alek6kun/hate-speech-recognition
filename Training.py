@@ -57,7 +57,7 @@ class CustomDataset(Dataset):
       # Convert label to a PyTorch tensor
       # First, convert the label data from a string to an integer
       if isinstance(label, str):
-          label = int(label)  # Convert label from string to integer
+          label = int(float(label))  # Convert label from string to integer
 
       return {
             'input_ids': input_ids,
@@ -71,7 +71,7 @@ train_dataset = CustomDataset(text_train, label_train, tokenizer)
 test_dataset = CustomDataset(text_test, label_test, tokenizer)
 
 # DataLoader parameters
-batch_size = 16
+batch_size = 32
 shuffle = True
 
 # Create the DataLoader instances for training and testing
@@ -108,7 +108,7 @@ class SMARTDeBERTaClassificationModel(nn.Module):
         # Compute initial (unperturbed) state
         state = eval(embed)
         # Apply classification loss
-        loss = F.cross_entropy(state.view(-1, 2), labels.view(-1))
+        loss = F.cross_entropy(state, labels)
         # Apply smart loss
         loss += self.weight * smart_loss_fn(embed, state)
 
@@ -128,7 +128,7 @@ if torch.cuda.device_count() > 1:
 model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=2e-5)
 scaler = GradScaler()
-accumulation_steps = 2  # Gradient accumulation steps
+accumulation_steps = 4  # Gradient accumulation steps
 
 def train_model(model, dataloader, optimizer, device):
     model.train()
