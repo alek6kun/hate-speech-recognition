@@ -158,8 +158,10 @@ df = df[df['label'].isin([0, 1])]
 # Remove rows where 'text' is NaN
 df = df.dropna(subset=['text'])
 df['text'] = df['text'].apply(clean_text)
+
+output_file = os.path.join(root_data, 'cleaned_fr_dataset_reduced.csv')
 # Save the cleaned dataset (optional)
-df.to_csv('cleaned_fr_dataset_reduced.csv', index=False)
+df.to_csv(output_file, index=False)
 
 print("Dataset cleaned and saved successfully!")
 
@@ -195,8 +197,10 @@ df = df[df['label'].isin([0, 1])]
 # Remove rows where 'text' is NaN
 df = df.dropna(subset=['text'])
 df['text'] = df['text'].apply(clean_text)
+
+output_file = os.path.join(root_data, 'cleaned_ar_dataset_reduced.csv')
 # Save the cleaned dataset (optional)
-df.to_csv('cleaned_ar_dataset_reduced.csv', index=False)
+df.to_csv(output_file, index=False)
 
 print("Dataset cleaned and saved successfully!")
 
@@ -231,8 +235,10 @@ df = df[df['label'].isin([0, 1])]
 # Remove rows where 'text' is NaN
 df = df.dropna(subset=['text'])
 df['text'] = df['text'].apply(clean_text)
+
+output_file = os.path.join(root_data, 'cleaned_en_dataset_reduced.csv')
 # Save the cleaned dataset (optional)
-df.to_csv('cleaned_en_dataset_reduced.csv', index=False)
+df.to_csv(output_file, index=False)
 
 print("Dataset cleaned and saved successfully!")
 
@@ -262,7 +268,7 @@ df8 = pd.read_csv(filename_8, header=None, skiprows=1)
 
 # Combine the DataFrames
 combined_df = pd.concat([df1, df2, df3, df4, df5, df6, df7, df8])
-cleaned_filename = '/Users/ninabodenstab/Desktop/University/EPFL/Ma2/Deep Learning/Projet/combined_dataset5.csv'
+cleaned_filename = os.path.join(root, 'Split Data', "combined_dataset.csv")
 combined_df.to_csv(cleaned_filename, header=['text', 'label'], index=False) #save dataset
 
 # Function to clean and verify the dataset
@@ -303,12 +309,12 @@ def check_csv_types(csv_file, output_file):
     # Save the cleaned DataFrame to a new CSV file
     df.to_csv(output_file, index=False)
     print(f"Cleaned DataFrame saved to {output_file}")
-check_csv_types('combined_dataset5.csv', '/Users/ninabodenstab/Desktop/University/EPFL/Ma2/Deep Learning/Projet/cleaned_completeDataset.csv')
+check_csv_types(cleaned_filename, cleaned_filename)
 
 ############### Separate into test train sets ##################
 from sklearn.model_selection import train_test_split
 # Load the new combined dataset for further processing
-completeDataset = pd.read_csv(os.path.join(root, 'Split Data', "cleaned_completeDataset.csv")) 
+completeDataset = pd.read_csv(cleaned_filename) 
 # Separate the DataFrame into two arrays: text and label
 array_text = completeDataset['text'].values  
 array_label = completeDataset['label'].values  
