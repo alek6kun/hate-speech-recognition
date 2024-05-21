@@ -79,7 +79,7 @@ array_label = combined_dataset3['label'].values
 def remove_nan_rows(text_data, label_data):
     # Assuming 'nan' is a string
     is_nan_text = np.array([str(item).strip().lower() == 'nan' for item in text_data])
-    is_nan_label = np.array([str(item).strip().lower() == 'nan' for item in label_data])
+    is_nan_label = np.array([str(item).strip().lower() == 'nan' or str(item).strip().lower() == 'label'  for item in label_data])
     
     valid_indices = ~(is_nan_text | is_nan_label)
     

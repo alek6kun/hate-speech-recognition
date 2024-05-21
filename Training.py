@@ -93,20 +93,26 @@ class SMARTDeBERTaClassificationModel(nn.Module):
         self.model = model
         self.weight = weight
 
-    def forward(self, input_ids, attention_mask, labels):
+    def forward(self, input_ids, attention_mask, labels=None):
         # Get initial embeddings
         embedder = self.model.get_input_embeddings()
         embed = embedder(input_ids)
-        
+
         # Define eval function
         def eval(embed):
             outputs = self.model(inputs_embeds=embed, attention_mask=attention_mask, labels=labels)
             return outputs.logits
-
-        # Define SMART loss
-        smart_loss_fn = SMARTLoss(eval_fn = eval, loss_fn = kl_loss, loss_last_fn = sym_kl_loss)
+        
         # Compute initial (unperturbed) state
         state = eval(embed)
+        
+        # Return here if in inference mode
+        if labels is None:
+            return state
+        
+        # Define SMART loss
+        smart_loss_fn = SMARTLoss(eval_fn = eval, loss_fn = kl_loss, loss_last_fn = sym_kl_loss)
+
         # Apply classification loss
         loss = F.cross_entropy(state, labels)
         # Apply smart loss
@@ -144,7 +150,7 @@ def train_model(model, dataloader, optimizer, device):
 
         with autocast():
             _, loss = model(input_ids, attention_mask, labels)
-            loss = loss / accumulation_steps  # Normalize loss
+            loss = torch.mean(loss / accumulation_steps)  # Normalize loss
 
         scaler.scale(loss).backward()
 
@@ -157,6 +163,10 @@ def train_model(model, dataloader, optimizer, device):
 
         if (batch_idx + 1) % accumulation_steps == 0:
             print(f'Batch {batch_idx + 1}/{total_steps}, Batch Loss: {loss.item():.4f}')
+        
+        del input_ids, attention_mask, labels, loss
+        if device == "cuda":
+            torch.cuda.empty_cache()
 
     avg_loss = total_loss / total_steps
     print(f'Training Loss: {avg_loss:.4f}')
@@ -176,15 +186,15 @@ def evaluate_model(model, dataloader, device):
     model.eval()
     predictions = []
     true_labels = []
-
+    total_steps = len(dataloader)
     with torch.no_grad():
-        for batch in dataloader:
+        for batch_idx, batch in enumerate(dataloader):
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
             labels = batch['labels'].to(device)
 
             with autocast():
-                outputs, _ = model(input_ids, attention_mask, labels)
+                outputs = model(input_ids, attention_mask)
                 _, preds = torch.max(outputs, dim=1)
 
             predictions.extend(preds.cpu().numpy())
