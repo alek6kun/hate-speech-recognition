@@ -162,7 +162,7 @@ def train_model(model, dataloader, optimizer, device):
         total_loss += loss.item()
 
         if (batch_idx + 1) % accumulation_steps == 0:
-            print(f'Batch {batch_idx + 1}/{total_steps}, Batch Loss: {loss.item():.4f}')
+            print(f'Batch {batch_idx + 1}/{total_steps}, Batch Loss: {loss.item()*accumulation_steps:.4f}')
         
         del input_ids, attention_mask, labels, loss
         if device == "cuda":
