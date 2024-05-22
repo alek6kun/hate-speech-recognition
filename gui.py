@@ -12,7 +12,7 @@ def animate_result(is_hate_speech):
             150-radius, 75-radius, 150+radius, 75+radius, outline=color, width=4)
         root.update()  # Update the GUI
         radius += 5
-        animation_canvas.after(50)  # Pause for 50 ms
+    animation_canvas.after(50)  # Pause for 50 ms
 
 def classify_input_text(event=None):
     user_input = entry.get()
@@ -43,16 +43,15 @@ def record_and_classify():
         result_label.config(text="Listening...")
         root.update()
         audio_data = recognizer.listen(source)
-
-    try:
-        text = recognizer.recognize_google(audio_data)
-        entry.delete(0, tk.END)
-        entry.insert(0, text)
-        classify_input_text()
-    except sr.UnknownValueError:
-        result_label.config(text="Sorry, I did not understand that.")
-    except sr.RequestError as e:
-        result_label.config(text=f"Could not request results; {e}")
+        try:
+            text = recognizer.recognize_google(audio_data, language=selected_language.get())
+            entry.delete(0, tk.END)
+            entry.insert(0, text)
+            classify_input_text()
+        except sr.UnknownValueError:
+            result_label.config(text="Sorry, I did not understand that.")
+        except sr.RequestError as e:
+            result_label.config(text=f"Could not request results; {e}")
 
 root = tk.Tk()
 root.title("Text Classifier")
@@ -76,5 +75,21 @@ animation_canvas.pack(pady=20)
 
 mic_button = tk.Button(root, text="Record and Classify", command=record_and_classify)
 mic_button.pack(pady=20)
+
+# Add language buttons
+language_label = tk.Label(root, text="Select Language:")
+language_label.pack(pady=10)
+
+language_frame = tk.Frame(root)
+language_frame.pack(pady=10)
+
+languages = ["English", "French", "German", "Chinese", "Japanese"]
+language_buttons = []
+selected_language = tk.StringVar(value="en-US")
+
+for language, code in zip(languages, ["en-US", "fr-FR", "de-DE", "zh-CN", "ja-JP"]):
+    button = tk.Radiobutton(language_frame, text=language, variable=selected_language, value=code)
+    button.pack(side=tk.LEFT, padx=5)
+    language_buttons.append(button)
 
 root.mainloop()
