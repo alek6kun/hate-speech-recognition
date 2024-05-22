@@ -256,15 +256,36 @@ filename_6 = os.path.join(root, "Data", "cleaned_fr_dataset_reduced.csv")
 filename_7 = os.path.join(root, "Data", "cleaned_ar_dataset_reduced.csv")
 filename_8 = os.path.join(root, "Data", "cleaned_en_dataset_reduced.csv")
 
+def balance_datasets(dataset):
+    # Separate the DataFrame into majority and minority classes
+    class_0_dataset = dataset[dataset.iloc[:, 1] == 0]
+    class_1_dataset = dataset[dataset.iloc[:, 1] == 1]
+    if (len(class_0_dataset) > len(class_1_dataset)):
+        # Undersample the majority class
+        class_0_dataset = resample(class_0_dataset,
+                                   replace=False,
+                                   n_samples=len(class_1_dataset),
+                                   random_state=42)
+    else:
+        class_1_dataset = resample(class_1_dataset,
+                                   replace=False,
+                                   n_samples=len(class_0_dataset),
+                                   random_state=42)
+    
+    # Combine the undersampled majority class with the minority class
+    undersampled_dataset = pd.concat([class_0_dataset, class_1_dataset])
+    
+    return undersampled_dataset
+
 # Load the CSV files into DataFrames, skipping the first row (header row)
-df1 = pd.read_csv(filename_1, header=None, skiprows=1)
-#df2 = pd.read_csv(filename_2, header=None, skiprows=1)
-df3 = pd.read_csv(filename_3, header=None, skiprows=1)
-df4 = pd.read_csv(filename_4, header=None, skiprows=1)
-df5 = pd.read_csv(filename_5, header=None, skiprows=1)
-df6 = pd.read_csv(filename_6, header=None, skiprows=1)
-df7 = pd.read_csv(filename_7, header=None, skiprows=1)
-df8 = pd.read_csv(filename_8, header=None, skiprows=1)
+df1 = balance_datasets(pd.read_csv(filename_1, header=None, skiprows=1))
+#df2 = balance_datasets(pd.read_csv(filename_2, header=None, skiprows=1))
+df3 = balance_datasets(pd.read_csv(filename_3, header=None, skiprows=1))
+df4 = balance_datasets(pd.read_csv(filename_4, header=None, skiprows=1))
+df5 = balance_datasets(pd.read_csv(filename_5, header=None, skiprows=1))
+df6 = balance_datasets(pd.read_csv(filename_6, header=None, skiprows=1))
+df7 = balance_datasets(pd.read_csv(filename_7, header=None, skiprows=1))
+df8 = balance_datasets(pd.read_csv(filename_8, header=None, skiprows=1))
 
 
 # Combine the DataFrames
@@ -332,23 +353,9 @@ def remove_nan_rows(dataset):
 # Remove 'nan' rows from train and test datasets
 completeDataset = remove_nan_rows(completeDataset)
 
-# Separate the DataFrame into majority and minority classes
-majority_class = completeDataset[completeDataset['label'] == 0]
-minority_class = completeDataset[completeDataset['label'] == 1]
-
-# Undersample the majority class
-minority_class_size = len(minority_class)
-majority_class_undersampled = resample(majority_class,
-                                       replace=False,
-                                       n_samples=minority_class_size,
-                                       random_state=42)
-
-# Combine the undersampled majority class with the minority class
-undersampled_dataset = pd.concat([majority_class_undersampled, minority_class])
-
 # Separate the DataFrame into two arrays: text and label
-array_text = undersampled_dataset['text'].values  
-array_label = undersampled_dataset['label'].values  
+array_text = completeDataset['text'].values  
+array_label = completeDataset['label'].values  
 
 # Split data
 text_train, text_test, label_train, label_test = train_test_split(
