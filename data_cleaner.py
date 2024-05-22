@@ -2,6 +2,7 @@ import os, sys
 import numpy as np
 import pandas as pd
 import re
+from sklearn.utils import resample
 
 root = os.path.dirname(os.path.abspath(__file__))
 root_data = os.path.join(root, 'Data')
@@ -247,7 +248,7 @@ root = os.path.dirname(os.path.abspath(__file__))
 
 # Define the paths to the CSV files
 filename_1 = os.path.join(root, "Data", "cleaned_data_toxygen.csv") 
-filename_2 = os.path.join(root, "Data", "HateMoji_reduced.csv")
+#filename_2 = os.path.join(root, "Data", "HateMoji_reduced.csv")
 filename_3 = os.path.join(root, "Data", "cleaned_online-misoginy-eacl2021_reduced.csv")
 filename_4 = os.path.join(root, "Data", "cleaned_Call_me_sexist_but_dataset_reduced.csv")
 filename_5 = os.path.join(root, "Data", "cleaned_Detecting_Offensive_Statements_towards_Foreigners_in_Social_Media_reduced.csv")
@@ -257,7 +258,7 @@ filename_8 = os.path.join(root, "Data", "cleaned_en_dataset_reduced.csv")
 
 # Load the CSV files into DataFrames, skipping the first row (header row)
 df1 = pd.read_csv(filename_1, header=None, skiprows=1)
-df2 = pd.read_csv(filename_2, header=None, skiprows=1)
+#df2 = pd.read_csv(filename_2, header=None, skiprows=1)
 df3 = pd.read_csv(filename_3, header=None, skiprows=1)
 df4 = pd.read_csv(filename_4, header=None, skiprows=1)
 df5 = pd.read_csv(filename_5, header=None, skiprows=1)
@@ -267,7 +268,7 @@ df8 = pd.read_csv(filename_8, header=None, skiprows=1)
 
 
 # Combine the DataFrames
-combined_df = pd.concat([df1, df2, df3, df4, df5, df6, df7, df8])
+combined_df = pd.concat([df1, df3, df4, df5, df6, df7, df8])
 cleaned_filename = os.path.join(root, 'Split Data', "combined_dataset.csv")
 combined_df.to_csv(cleaned_filename, header=['text', 'label'], index=False) #save dataset
 
@@ -314,26 +315,40 @@ check_csv_types(cleaned_filename, cleaned_filename)
 ############### Separate into test train sets ##################
 from sklearn.model_selection import train_test_split
 # Load the new combined dataset for further processing
-completeDataset = pd.read_csv(cleaned_filename) 
-# Separate the DataFrame into two arrays: text and label
-array_text = completeDataset['text'].values  
-array_label = completeDataset['label'].values  
+completeDataset = pd.read_csv(cleaned_filename)
 
 # Function to remove 'nan' rows for string data
-def remove_nan_rows(text_data, label_data):
+def remove_nan_rows(dataset):
     # Assuming 'nan' is a string
-    is_nan_text = np.array([str(item).strip().lower() == 'nan' for item in text_data])
-    is_nan_label = np.array([str(item).strip().lower() == 'nan' for item in label_data])
+    is_nan_text = np.array([str(item).strip().lower() == 'nan' for item in dataset['text']])
+    is_nan_label = np.array([str(item).strip().lower() == 'nan' for item in dataset['label']])
     
     valid_indices = ~(is_nan_text | is_nan_label)
     
-    cleaned_text_data = text_data[valid_indices]
-    cleaned_label_data = label_data[valid_indices]
+    cleaned_dataset = dataset.loc[valid_indices, :]
     
-    return cleaned_text_data, cleaned_label_data
+    return cleaned_dataset
 
 # Remove 'nan' rows from train and test datasets
-array_text, array_label = remove_nan_rows(array_text, array_label)
+completeDataset = remove_nan_rows(completeDataset)
+
+# Separate the DataFrame into majority and minority classes
+majority_class = completeDataset[completeDataset['label'] == 0]
+minority_class = completeDataset[completeDataset['label'] == 1]
+
+# Undersample the majority class
+minority_class_size = len(minority_class)
+majority_class_undersampled = resample(majority_class,
+                                       replace=False,
+                                       n_samples=minority_class_size,
+                                       random_state=42)
+
+# Combine the undersampled majority class with the minority class
+undersampled_dataset = pd.concat([majority_class_undersampled, minority_class])
+
+# Separate the DataFrame into two arrays: text and label
+array_text = undersampled_dataset['text'].values  
+array_label = undersampled_dataset['label'].values  
 
 # Split data
 text_train, text_test, label_train, label_test = train_test_split(
