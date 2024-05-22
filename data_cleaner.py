@@ -278,18 +278,18 @@ def balance_datasets(dataset):
     return undersampled_dataset
 
 # Load the CSV files into DataFrames, skipping the first row (header row)
-df1 = balance_datasets(pd.read_csv(filename_1, header=None, skiprows=1))
-#df2 = balance_datasets(pd.read_csv(filename_2, header=None, skiprows=1))
-df3 = balance_datasets(pd.read_csv(filename_3, header=None, skiprows=1))
-df4 = balance_datasets(pd.read_csv(filename_4, header=None, skiprows=1))
-df5 = balance_datasets(pd.read_csv(filename_5, header=None, skiprows=1))
-df6 = balance_datasets(pd.read_csv(filename_6, header=None, skiprows=1))
-df7 = balance_datasets(pd.read_csv(filename_7, header=None, skiprows=1))
-df8 = balance_datasets(pd.read_csv(filename_8, header=None, skiprows=1))
+df1 = pd.read_csv(filename_1, header=None, skiprows=1)
+#df2 = pd.read_csv(filename_2, header=None, skiprows=1)
+df3 = pd.read_csv(filename_3, header=None, skiprows=1)
+df4 = pd.read_csv(filename_4, header=None, skiprows=1)
+df5 = pd.read_csv(filename_5, header=None, skiprows=1)
+df6 = pd.read_csv(filename_6, header=None, skiprows=1)
+df7 = pd.read_csv(filename_7, header=None, skiprows=1)
+df8 = pd.read_csv(filename_8, header=None, skiprows=1)
 
 
 # Combine the DataFrames
-combined_df = pd.concat([df1, df3, df4, df5, df6, df7, df8])
+combined_df = pd.concat([df1, df4, df5, df6, df7, df8])
 cleaned_filename = os.path.join(root, 'Split Data', "combined_dataset.csv")
 combined_df.to_csv(cleaned_filename, header=['text', 'label'], index=False) #save dataset
 

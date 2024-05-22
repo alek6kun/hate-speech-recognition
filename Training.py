@@ -134,7 +134,7 @@ if torch.cuda.device_count() > 1:
 model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=2e-5)
 scaler = GradScaler()
-accumulation_steps = 4  # Gradient accumulation steps
+accumulation_steps = 2  # Gradient accumulation steps
 
 def train_model(model, dataloader, optimizer, device):
     model.train()
