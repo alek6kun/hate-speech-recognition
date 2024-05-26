@@ -168,7 +168,7 @@ def train_model(model, dataloader, optimizer, device):
         if device == "cuda":
             torch.cuda.empty_cache()
 
-    avg_loss = total_loss / total_steps
+    avg_loss = (total_loss / total_steps)*accumulation_steps
     print(f'Training Loss: {avg_loss:.4f}')
     return avg_loss
 
@@ -203,7 +203,7 @@ def evaluate_model(model, dataloader, device):
     metrics = compute_metrics(predictions, true_labels)
     return metrics
 
-num_epochs = 12  # Define the number of epochs
+num_epochs = 2  # Define the number of epochs
 
 for epoch in range(num_epochs):
     print(f'Epoch {epoch+1}/{num_epochs}')
