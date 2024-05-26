@@ -1,5 +1,8 @@
 # hate-speech-recognition
 
+## The environment
+Python 3.10.4
+All necessary modules in requirements.txt
 ## Install SMART-mDeBERTa hate-speech recognition
 ```
 git clone https://github.com/alek6kun/hate-speech-recognition.git
