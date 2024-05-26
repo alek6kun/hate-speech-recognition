@@ -1,5 +1,5 @@
 #!/bin/bash -l
-#SBATCH --chdir /home/limozin/hate-speech-recognition
+#SBATCH --chdir /scratch/izar/limozin/hate-speech-recognition
 #SBATCH --job-name smart-deberta-training
 #SBATCH --ntasks 1
 #SBATCH --cpus-per-task 1
@@ -11,7 +11,7 @@
 
 echo "Starting job on $(hostname)"
 echo "Loading modules..."
-module load gcc/11.3.0 intel/2021.6.0 python/3.10.4 cuda/12.1.1 openmpi/4.1.3-cuda py-torch/2.0.1-mpi-openmp-cuda
+module load gcc/11.3.0 intel/2021.6.0 python/3.10.4 cuda/12.1.1
 
 echo "Activating virtual environment..."
 source /home/limozin/venvs/course_py-3.10/bin/activate  # Ensure this points to your virtual environment

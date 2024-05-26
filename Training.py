@@ -134,7 +134,7 @@ if torch.cuda.device_count() > 1:
 model.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=2e-5)
 scaler = GradScaler()
-accumulation_steps = 2  # Gradient accumulation steps
+accumulation_steps = 4  # Gradient accumulation steps
 
 def train_model(model, dataloader, optimizer, device):
     model.train()
@@ -203,7 +203,7 @@ def evaluate_model(model, dataloader, device):
     metrics = compute_metrics(predictions, true_labels)
     return metrics
 
-num_epochs = 3  # Define the number of epochs
+num_epochs = 12  # Define the number of epochs
 
 for epoch in range(num_epochs):
     print(f'Epoch {epoch+1}/{num_epochs}')

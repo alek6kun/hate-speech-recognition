@@ -298,7 +298,7 @@ df_ethos.columns = range(df_ethos.shape[1])
 df_ethos = df_ethos.iloc[1:].reset_index(drop=True)
 
 # Combine the DataFrames
-combined_df = pd.concat([df_ethos, df1, df3, df4, df5, df6, df7, df8])
+combined_df = balance_datasets(pd.concat([df_ethos, df1, df3, df4, df5, df6, df7, df8]))
 cleaned_filename = os.path.join(root, 'Split Data', "combined_dataset.csv")
 combined_df.to_csv(cleaned_filename, header=['text', 'label'], index=False) #save dataset
 
