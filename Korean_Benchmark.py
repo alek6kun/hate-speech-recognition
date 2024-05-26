@@ -1,17 +1,13 @@
-from datasets import load_dataset
 from model import classify_text
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 import os
 import numpy as np
+import pandas as pd
 
 root = os.path.dirname(os.path.abspath(__file__))
-test_texts_path = os.path.join(root, 'Split Data', 'text_test.npy')
+dataset_path = os.path.join(root, 'Data', 'kmhas_test.txt')
 
-# Load the test texts from the .npy file
-test_texts = np.load(test_texts_path, allow_pickle=True)
-
-# Load the Ethos dataset
-ds_ethos = load_dataset('ethos', 'binary')
+ds_chinese = pd.read_csv(dataset_path, sep='\t', usecols=['document', 'label'])
 
 def compute_metrics(pred_labels, true_labels):
     accuracy = accuracy_score(true_labels, pred_labels)
@@ -26,11 +22,15 @@ def compute_metrics(pred_labels, true_labels):
 preds = []
 real = []
 
-# Iterate over the 'train' split of the Ethos dataset
-for example in ds_ethos['train']:
-    if example['text'] in test_texts:
-        preds.append(classify_text(example['text']))
-        real.append(example['label'])
+# Iterate over the rows of the DataFrame
+for i, row in ds_chinese.iterrows():
+    comment_text = row['document']
+    label = int(int(row['label'][0]) != 8)
+    preds.append(int(classify_text(comment_text)))
+    real.append(label)
+    if i == 1000:
+        break
 
 metrics = compute_metrics(preds, real)
 print(f'Validation Metrics: {metrics}')
+print(f'Number of 1s: {np.sum(real)}, Number of 0s: {len(real) - np.sum(real)}')
