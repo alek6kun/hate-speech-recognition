@@ -36,7 +36,7 @@ model = SMARTDeBERTaClassificationModel(base_model, weight=0.02).to(device)
 if torch.cuda.device_count() > 1:
     model = torch.nn.DataParallel(model)
 
-model.load_state_dict(torch.load('without_hatemoji.pt', map_location=device))
+model.load_state_dict(torch.load('BALANCED.pt', map_location=device))
 model.eval()
 
 tokenizer = DebertaV2Tokenizer.from_pretrained('microsoft/mdeberta-v3-base')
