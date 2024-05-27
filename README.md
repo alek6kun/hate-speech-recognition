@@ -1,5 +1,5 @@
 # hate-speech-recognition
-Demonstration video:* https://youtu.be/gavHuw_kwHw
+*Demonstration video:* https://youtu.be/gavHuw_kwHw
 
 This is the code and datasets used for training our hate speech classifier model with PyTorch.
 There are more details about the implementation and citations in the report.pdf.
