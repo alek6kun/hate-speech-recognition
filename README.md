@@ -1,8 +1,14 @@
 # hate-speech-recognition
+Demonstration video:* https://youtu.be/gavHuw_kwHw
+
+This is the code and datasets used for training our hate speech classifier model with PyTorch.
+There are more details about the implementation and citations in the report.pdf.
 
 ## The environment
 Python 3.10.4
+
 All necessary modules in requirements.txt
+
 ## Install SMART-mDeBERTa hate-speech recognition
 ```
 git clone https://github.com/alek6kun/hate-speech-recognition.git
